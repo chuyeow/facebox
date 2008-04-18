@@ -78,10 +78,11 @@
 
   $.extend($.facebox, {
     settings: {
-      opacity      : 0,
+      opacity      : 0, // Set from 0 (invisible) to 1 (fully opaque).
       overlay      : true,
       loadingImage : '/facebox/loading.gif',
       closeImage   : '/facebox/closelabel.gif',
+      position     : { top: null, left: null },  // In px, if set. E.g. { top: 20 }.
       imageTypes   : [ 'png', 'jpg', 'jpeg', 'gif' ],
       faceboxHtml  : '\
     <div id="facebox" style="display:none;"> \
@@ -122,10 +123,21 @@
       $('#facebox .body').children().hide().end().
         append('<div class="loading"><img src="'+$.facebox.settings.loadingImage+'"/></div>');
 
-      $('#facebox').css({
-        top: getPageScroll()[1] + (getPageHeight() / 10),
-        left: 385.5
-      }).show();
+      var css = {};
+      var pageScroll = getPageScroll();
+      if ($.facebox.settings.position.top) {
+        css.top = pageScroll[1] + $.facebox.settings.position.top;
+      } else {
+        css.top = pageScroll[1] + (getPageHeight() / 10);
+      }
+      if ($.facebox.settings.position.left) {
+        css.left = pageScroll[0] + $.facebox.settings.position.left;
+      } else {
+        $('#facebox').show();
+        css.left = pageScroll[0] + $(window).width() / 2 - ($('#facebox table').width() / 2);
+      }
+
+      $('#facebox').css(css).show();
 
       $(document).bind('keydown.facebox', function(e) {
         if (e.keyCode == 27) $.facebox.close();
@@ -140,7 +152,10 @@
       $('#facebox .content').append(data);
       $('#facebox .loading').remove();
       $('#facebox .body').children().fadeIn('normal');
-      $('#facebox').css('left', $(window).width() / 2 - ($('#facebox table').width() / 2));
+      if ($.facebox.settings.position.left) {
+      } else {
+        $('#facebox').css('left', $(window).width() / 2 - ($('#facebox table').width() / 2));
+      }
       $(document).trigger('reveal.facebox').trigger('afterReveal.facebox');
     },
 
@@ -202,7 +217,7 @@
     $('#facebox .close').click($.facebox.close);
     $('#facebox .close_image').attr('src', $.facebox.settings.closeImage);
   }
-  
+
   // getPageScroll() by quirksmode.com
   function getPageScroll() {
     var xScroll, yScroll;
