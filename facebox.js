@@ -2,7 +2,7 @@
  * Created by Chris Wanstrath, with modifications by Cheah Chu Yeow.
  *
  * Facebox (for jQuery)
- * version: 1.1 (03/13/2008)
+ * version: 1.2 (05/05/2008)
  * @requires jQuery v1.2 or later
  *
  * Examples at http://famspam.com/facebox/
@@ -31,6 +31,7 @@
  *  You can also use it programmatically:
  * 
  *    jQuery.facebox('some html')
+ *    jQuery.facebox('some html', 'my-groovy-style')
  *
  *  The above will open a facebox with "some html" as the content.
  *    
@@ -41,10 +42,14 @@
  *  The above will show a loading screen before the passed function is called,
  *  allowing for a better ajaxy experience.
  *
- *  The facebox function can also display an ajax page or image:
+ *  The facebox function can also display an ajax page, an image, or the contents of a div:
  *  
  *    jQuery.facebox({ ajax: 'remote.html' })
- *    jQuery.facebox({ image: 'dude.jpg' })
+ *    jQuery.facebox({ ajax: 'remote.html' }, 'my-groovy-style')
+ *    jQuery.facebox({ image: 'stairs.jpg' })
+ *    jQuery.facebox({ image: 'stairs.jpg' }, 'my-groovy-style')
+ *    jQuery.facebox({ div: '#box' })
+ *    jQuery.facebox({ div: '#box' }, 'my-groovy-style')
  *
  *  Want to close the facebox?  Trigger the 'close.facebox' document event:
  *
@@ -185,7 +190,7 @@
       return false;
     }
 
-    return this.click(clickHandler);
+    return this.bind('click.facebox', clickHandler);
   };
 
   /*
@@ -201,7 +206,7 @@
     makeCompatible();
 
     var imageTypes = $.facebox.settings.imageTypes.join('|');
-    $.facebox.settings.imageTypesRegexp = new RegExp('\.' + imageTypes + '$', 'i');
+    $.facebox.settings.imageTypesRegexp = new RegExp('\.(' + imageTypes + ')$', 'i');
 
     if (settings) $.extend($.facebox.settings, settings);
     $('body').append($.facebox.settings.faceboxHtml);
@@ -268,7 +273,7 @@
     if (href.match(/#/)) {
       var url    = window.location.href.split('#')[0];
       var target = href.replace(url,'');
-      $.facebox.reveal($(target).clone().show(), klass);
+      $.facebox.reveal($(target).show().replaceWith("<div id='facebox_moved'></div>"), klass);
 
     // image
     } else if (href.match($.facebox.settings.imageTypesRegexp)) {
@@ -327,7 +332,8 @@
   $(document).bind('close.facebox', function() {
     $(document).unbind('keydown.facebox');
     $('#facebox').fadeOut(function() {
-      $('#facebox .content').removeClass().addClass('content');
+      if ($('#facebox_moved').length == 0) $('#facebox .content').removeClass().addClass('content');
+      else $('#facebox_moved').replaceWith($('#facebox .content').children().hide());
       hideOverlay();
       $('#facebox .loading').remove();
     });
